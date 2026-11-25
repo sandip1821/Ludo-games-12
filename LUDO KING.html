@@ -1,0 +1,2564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="theme-color" content="#1e1b4b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <title>LUDO KING - Offline 3D Cartoon Edition</title>
+  <style>
+    /* ==========================================================================
+       1. CSS VARIABLES, THEMES & RESET
+       ========================================================================== */
+    :root {
+      --bg-grad-1: #1e1b4b;
+      --bg-grad-2: #312e81;
+      --bg-grad-3: #1e3a8a;
+      --grid-color: rgba(255, 255, 255, 0.06);
+
+      --board-bg: #ffffff;
+      --board-border: #f59e0b;
+      --tile-border: #cbd5e1;
+      --tile-bg: #ffffff;
+      --safe-star-color: #64748b;
+
+      /* Player Colors (Vibrant 3D Cartoon Palette) */
+      --red-main: #ef4444;
+      --red-dark: #991b1b;
+      --red-light: #fca5a5;
+      --red-glow: rgba(239, 68, 68, 0.65);
+
+      --green-main: #22c55e;
+      --green-dark: #166534;
+      --green-light: #86efac;
+      --green-glow: rgba(34, 197, 94, 0.65);
+
+      --yellow-main: #eab308;
+      --yellow-dark: #854d0e;
+      --yellow-light: #fef08a;
+      --yellow-glow: rgba(234, 179, 8, 0.65);
+
+      --blue-main: #3b82f6;
+      --blue-dark: #1e40af;
+      --blue-light: #93c5fd;
+      --blue-glow: rgba(59, 130, 246, 0.65);
+
+      --ui-card: rgba(15, 23, 42, 0.85);
+      --ui-border: rgba(255, 255, 255, 0.18);
+      --text-primary: #ffffff;
+      --text-secondary: #cbd5e1;
+    }
+
+    /* Theme: Neon Cyber */
+    body.theme-neon {
+      --bg-grad-1: #090d16;
+      --bg-grad-2: #111827;
+      --bg-grad-3: #1e1b4b;
+      --grid-color: rgba(56, 189, 248, 0.12);
+      --board-bg: #0f172a;
+      --board-border: #06b6d4;
+      --tile-border: #1e293b;
+      --tile-bg: #131c31;
+      --safe-star-color: #38bdf8;
+    }
+
+    /* Theme: Wooden Gold */
+    body.theme-wood {
+      --bg-grad-1: #451a03;
+      --bg-grad-2: #78350f;
+      --bg-grad-3: #422006;
+      --grid-color: rgba(253, 224, 71, 0.08);
+      --board-bg: #fef3c7;
+      --board-border: #d97706;
+      --tile-border: #d6c39c;
+      --tile-bg: #fffbeb;
+      --safe-star-color: #b45309;
+    }
+
+    /* Theme: Pastel Candy */
+    body.theme-candy {
+      --bg-grad-1: #831843;
+      --bg-grad-2: #701a75;
+      --bg-grad-3: #4c1d95;
+      --grid-color: rgba(244, 114, 182, 0.12);
+      --board-bg: #fdf2f8;
+      --board-border: #ec4899;
+      --tile-border: #fbcfe8;
+      --tile-bg: #ffffff;
+      --safe-star-color: #db2777;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-tap-highlight-color: transparent;
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: linear-gradient(135deg, var(--bg-grad-1), var(--bg-grad-2), var(--bg-grad-3));
+      color: var(--text-primary);
+      touch-action: manipulation;
+    }
+
+    /* Animated Colorful Grid Pattern Overlay */
+    .bg-pattern {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(to right, var(--grid-color) 1px, transparent 1px),
+        linear-gradient(to bottom, var(--grid-color) 1px, transparent 1px),
+        radial-gradient(circle at 15% 20%, rgba(239, 68, 68, 0.18), transparent 35%),
+        radial-gradient(circle at 85% 25%, rgba(34, 197, 94, 0.18), transparent 35%),
+        radial-gradient(circle at 20% 80%, rgba(59, 130, 246, 0.18), transparent 35%),
+        radial-gradient(circle at 80% 85%, rgba(234, 179, 8, 0.18), transparent 35%);
+      background-size: 36px 36px, 36px 36px, 100% 100%, 100% 100%, 100% 100%, 100% 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ==========================================================================
+       2. 3D GLOSSY BUTTONS & COMMON UI ELEMENTS
+       ========================================================================== */
+    .btn-3d {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 14px 24px;
+      border: none;
+      border-radius: 18px;
+      font-size: 1rem;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      color: #fff;
+      cursor: pointer;
+      text-shadow: 0 2px 3px rgba(0, 0, 0, 0.35);
+      transition: transform 0.12s cubic-bezier(0.34, 1.56, 0.64, 1), filter 0.15s ease;
+      overflow: hidden;
+    }
+
+    .btn-3d::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 6%;
+      right: 6%;
+      height: 45%;
+      background: linear-gradient(to bottom, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.05));
+      border-radius: 14px 14px 50% 50%;
+      pointer-events: none;
+    }
+
+    .btn-3d:active {
+      transform: translateY(4px) scale(0.97);
+    }
+
+    .btn-gold {
+      background: linear-gradient(180deg, #fbbf24 0%, #f59e0b 60%, #d97706 100%);
+      box-shadow: 0 6px 0 #92400e, 0 12px 24px rgba(245, 158, 11, 0.45);
+      color: #1e1b4b;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+    }
+    .btn-gold:active {
+      box-shadow: 0 2px 0 #92400e, 0 6px 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .btn-green {
+      background: linear-gradient(180deg, #4ade80 0%, #22c55e 60%, #16a34a 100%);
+      box-shadow: 0 6px 0 #14532d, 0 12px 24px rgba(34, 197, 94, 0.4);
+    }
+    .btn-green:active {
+      box-shadow: 0 2px 0 #14532d, 0 6px 12px rgba(34, 197, 94, 0.35);
+    }
+
+    .btn-blue {
+      background: linear-gradient(180deg, #60a5fa 0%, #3b82f6 60%, #2563eb 100%);
+      box-shadow: 0 5px 0 #1e3a8a, 0 10px 20px rgba(59, 130, 246, 0.35);
+    }
+    .btn-blue:active {
+      box-shadow: 0 2px 0 #1e3a8a;
+    }
+
+    .btn-purple {
+      background: linear-gradient(180deg, #c084fc 0%, #9333ea 60%, #7e22ce 100%);
+      box-shadow: 0 5px 0 #4c1d95, 0 10px 20px rgba(147, 51, 234, 0.35);
+    }
+    .btn-purple:active {
+      box-shadow: 0 2px 0 #4c1d95;
+    }
+
+    .btn-red {
+      background: linear-gradient(180deg, #f87171 0%, #ef4444 60%, #dc2626 100%);
+      box-shadow: 0 5px 0 #7f1d1d, 0 10px 20px rgba(239, 68, 68, 0.35);
+    }
+    .btn-red:active {
+      box-shadow: 0 2px 0 #7f1d1d;
+    }
+
+    .btn-icon {
+      width: 46px;
+      height: 46px;
+      padding: 0;
+      border-radius: 14px;
+      font-size: 1.25rem;
+    }
+
+    /* ==========================================================================
+       3. SCREENS & LAYOUT CONTAINERS
+       ========================================================================== */
+    .screen {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px;
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+
+    .screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.96);
+    }
+
+    /* ==========================================================================
+       4. HOME SCREEN & 3D LOGO
+       ========================================================================== */
+    .home-top-bar {
+      width: 100%;
+      max-width: 520px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .profile-pill {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      padding: 6px 14px 6px 6px;
+      border-radius: 999px;
+      cursor: pointer;
+      backdrop-filter: blur(8px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
+      transition: transform 0.15s ease;
+    }
+    .profile-pill:active {
+      transform: scale(0.96);
+    }
+
+    .profile-avatar-circle {
+      width: 38px;
+      height: 38px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #fbbf24, #f59e0b);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      box-shadow: inset 0 -2px 4px rgba(0,0,0,0.25);
+    }
+
+    .profile-pill-info {
+      display: flex;
+      flex-direction: column;
+    }
+    .profile-pill-name {
+      font-weight: 800;
+      font-size: 0.9rem;
+      color: #fff;
+    }
+    .profile-pill-score {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #fbbf24;
+    }
+
+    .home-quick-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    /* Hero Logo */
+    .logo-showcase {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin: auto 0;
+      animation: floatLogo 3.5s ease-in-out infinite;
+    }
+
+    @keyframes floatLogo {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .logo-shield {
+      position: relative;
+      width: 240px;
+      max-width: 72vw;
+      filter: drop-shadow(0 16px 28px rgba(0, 0, 0, 0.55));
+    }
+
+    .logo-subtitle {
+      margin-top: 8px;
+      background: rgba(255, 255, 255, 0.14);
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      padding: 5px 16px;
+      border-radius: 999px;
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: #fde047;
+      backdrop-filter: blur(4px);
+    }
+
+    /* Home Menu Grid */
+    .home-menu-card {
+      width: 100%;
+      max-width: 440px;
+      background: rgba(15, 23, 42, 0.75);
+      border: 2px solid rgba(255, 255, 255, 0.16);
+      border-radius: 28px;
+      padding: 20px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.45);
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .home-play-btn {
+      width: 100%;
+      padding: 18px;
+      font-size: 1.35rem;
+      border-radius: 20px;
+      letter-spacing: 1px;
+    }
+
+    .home-sub-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .home-sub-grid .btn-3d {
+      padding: 13px 12px;
+      font-size: 0.92rem;
+    }
+
+    /* ==========================================================================
+       5. MODALS (SETUP, PROFILE, SETTINGS, WINNER)
+       ========================================================================== */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      z-index: 50;
+      background: rgba(6, 10, 24, 0.78);
+      backdrop-filter: blur(6px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.25s ease;
+    }
+
+    .modal-backdrop.active {
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .modal-card {
+      width: 100%;
+      max-width: 460px;
+      max-height: 90vh;
+      overflow-y: auto;
+      background: linear-gradient(165deg, #1e293b 0%, #0f172a 100%);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 26px;
+      padding: 20px;
+      box-shadow: 0 25px 50px rgba(0, 0, 0, 0.65);
+      transform: translateY(16px) scale(0.96);
+      transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .modal-backdrop.active .modal-card {
+      transform: translateY(0) scale(1);
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+
+    .modal-title {
+      font-size: 1.25rem;
+      font-weight: 900;
+      color: #fbbf24;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .modal-close {
+      width: 36px;
+      height: 36px;
+      border-radius: 12px;
+      border: none;
+      background: rgba(255, 255, 255, 0.12);
+      color: #fff;
+      font-size: 1.1rem;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    /* Setup Modal Controls */
+    .mode-selector {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+
+    .mode-btn {
+      padding: 10px 6px;
+      border-radius: 14px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.06);
+      color: #cbd5e1;
+      font-weight: 800;
+      font-size: 0.88rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .mode-btn.active {
+      background: linear-gradient(180deg, #fbbf24, #f59e0b);
+      color: #1e1b4b;
+      border-color: #fef08a;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+    }
+
+    .preset-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+    .preset-chip {
+      flex: 1;
+      padding: 8px;
+      border-radius: 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      background: rgba(59, 130, 246, 0.2);
+      color: #93c5fd;
+      font-size: 0.78rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    .preset-chip:active {
+      transform: scale(0.97);
+    }
+
+    .player-slot-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-bottom: 18px;
+    }
+
+    .player-slot-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      border-radius: 16px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 2px solid transparent;
+      transition: opacity 0.2s ease;
+    }
+
+    .player-slot-row.disabled {
+      opacity: 0.35;
+      pointer-events: none;
+    }
+
+    .slot-color-badge {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      cursor: pointer;
+      border: 3px solid #fff;
+      box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+      transition: transform 0.15s ease;
+    }
+    .slot-color-badge:active {
+      transform: scale(0.9);
+    }
+
+    .slot-name-input {
+      flex: 1;
+      min-width: 0;
+      background: rgba(0, 0, 0, 0.35);
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      border-radius: 10px;
+      padding: 8px 10px;
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+
+    .slot-type-toggle {
+      padding: 8px 10px;
+      border-radius: 10px;
+      border: none;
+      font-weight: 800;
+      font-size: 0.78rem;
+      cursor: pointer;
+      min-width: 78px;
+      text-align: center;
+    }
+
+    .slot-type-toggle.human {
+      background: #22c55e;
+      color: #052e16;
+    }
+    .slot-type-toggle.ai {
+      background: #38bdf8;
+      color: #082f49;
+    }
+
+    /* Settings & Profile Styling */
+    .setting-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.06);
+      border-radius: 14px;
+      margin-bottom: 10px;
+    }
+
+    .theme-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
+      margin-top: 8px;
+    }
+
+    .theme-option {
+      padding: 10px;
+      border-radius: 12px;
+      border: 2px solid rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-weight: 700;
+      font-size: 0.85rem;
+      cursor: pointer;
+      text-align: center;
+    }
+    .theme-option.active {
+      border-color: #fbbf24;
+      background: rgba(251, 191, 36, 0.2);
+      color: #fde047;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+      margin: 14px 0;
+    }
+
+    .stat-box {
+      background: rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 10px 6px;
+      text-align: center;
+    }
+    .stat-val {
+      font-size: 1.3rem;
+      font-weight: 900;
+      color: #fbbf24;
+    }
+    .stat-lbl {
+      font-size: 0.72rem;
+      color: #94a3b8;
+      font-weight: 700;
+      text-transform: uppercase;
+    }
+
+    .history-list {
+      max-height: 180px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .history-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      font-size: 0.82rem;
+    }
+
+    .avatar-picker {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      margin-top: 8px;
+    }
+    .avatar-opt {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      background: rgba(255,255,255,0.1);
+      font-size: 1.3rem;
+      cursor: pointer;
+    }
+    .avatar-opt.active {
+      border-color: #fbbf24;
+      background: rgba(251, 191, 36, 0.25);
+    }
+
+    /* ==========================================================================
+       6. GAMEPLAY SCREEN, HUD & 3D DICE
+       ========================================================================== */
+    .game-screen {
+      justify-content: space-between;
+      padding: 10px 10px 14px;
+    }
+
+    .game-header {
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .turn-banner {
+      flex: 1;
+      background: rgba(15, 23, 42, 0.82);
+      border: 2px solid rgba(255, 255, 255, 0.2);
+      border-radius: 16px;
+      padding: 8px 14px;
+      text-align: center;
+      font-weight: 800;
+      font-size: 0.92rem;
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    /* Player Pods Row (Top & Bottom) */
+    .pods-row {
+      width: 100%;
+      max-width: 540px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .player-pod {
+      flex: 1;
+      max-width: 48%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 7px 10px;
+      border-radius: 18px;
+      background: rgba(15, 23, 42, 0.72);
+      border: 2px solid rgba(255, 255, 255, 0.14);
+      opacity: 0.6;
+      transition: all 0.25s ease;
+    }
+
+    .player-pod.inactive-slot {
+      visibility: hidden;
+    }
+
+    .player-pod.active-turn {
+      opacity: 1;
+      transform: scale(1.03);
+      background: rgba(15, 23, 42, 0.95);
+    }
+
+    .player-pod.active-turn[data-color="red"] {
+      border-color: var(--red-main);
+      box-shadow: 0 0 18px var(--red-glow);
+    }
+    .player-pod.active-turn[data-color="green"] {
+      border-color: var(--green-main);
+      box-shadow: 0 0 18px var(--green-glow);
+    }
+    .player-pod.active-turn[data-color="yellow"] {
+      border-color: var(--yellow-main);
+      box-shadow: 0 0 18px var(--yellow-glow);
+    }
+    .player-pod.active-turn[data-color="blue"] {
+      border-color: var(--blue-main);
+      box-shadow: 0 0 18px var(--blue-glow);
+    }
+
+    .pod-meta {
+      display: flex;
+      flex-direction: column;
+      min-width: 0;
+    }
+
+    .pod-name {
+      font-weight: 800;
+      font-size: 0.85rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .pod-sub {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #94a3b8;
+    }
+
+    /* 3D CSS Dice */
+    .dice-box {
+      width: 48px;
+      height: 48px;
+      perspective: 300px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+
+    .dice-cube {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.55s cubic-bezier(0.22, 1.25, 0.36, 1);
+    }
+
+    .dice-cube.rolling {
+      animation: diceSpin 0.45s linear infinite;
+    }
+
+    @keyframes diceSpin {
+      0% { transform: rotateX(0deg) rotateY(0deg) rotateZ(0deg); }
+      50% { transform: rotateX(180deg) rotateY(220deg) rotateZ(90deg); }
+      100% { transform: rotateX(360deg) rotateY(360deg) rotateZ(360deg); }
+    }
+
+    .dice-face {
+      position: absolute;
+      width: 48px;
+      height: 48px;
+      border-radius: 11px;
+      background: linear-gradient(145deg, #ffffff 0%, #e2e8f0 100%);
+      border: 2px solid #cbd5e1;
+      box-shadow: inset 0 0 8px rgba(0,0,0,0.12);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      padding: 6px;
+      gap: 2px;
+    }
+
+    .pip {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #1e293b;
+      align-self: center;
+      justify-self: center;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.5);
+    }
+    .pip.red-pip {
+      background: #ef4444;
+      width: 10px;
+      height: 10px;
+    }
+
+    /* Cube Face Transforms */
+    .face-1 { transform: rotateY(0deg) translateZ(24px); }
+    .face-2 { transform: rotateY(90deg) translateZ(24px); }
+    .face-3 { transform: rotateX(90deg) translateZ(24px); }
+    .face-4 { transform: rotateX(-90deg) translateZ(24px); }
+    .face-5 { transform: rotateY(-90deg) translateZ(24px); }
+    .face-6 { transform: rotateY(180deg) translateZ(24px); }
+
+    .dice-pulse {
+      animation: pulseDiceRing 1.1s infinite;
+      border-radius: 14px;
+    }
+
+    @keyframes pulseDiceRing {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.8); }
+      50% { box-shadow: 0 0 0 8px rgba(251, 191, 36, 0); }
+    }
+
+    /* ==========================================================================
+       7. 15x15 LUDO BOARD & 3D GLOSSY TOKENS
+       ========================================================================== */
+    .board-wrapper {
+      position: relative;
+      width: min(94vw, 56vh, 490px);
+      height: min(94vw, 56vh, 490px);
+      aspect-ratio: 1 / 1;
+      background: var(--board-bg);
+      border: 6px solid var(--board-border);
+      border-radius: 22px;
+      box-shadow:
+        0 18px 40px rgba(0, 0, 0, 0.55),
+        inset 0 0 0 3px rgba(255, 255, 255, 0.5);
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ludo-board {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(15, 1fr);
+      grid-template-rows: repeat(15, 1fr);
+      border-radius: 14px;
+      overflow: hidden;
+      background: var(--tile-bg);
+    }
+
+    .cell {
+      border: 0.5px solid var(--tile-border);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--tile-bg);
+    }
+
+    /* Colored Track & Home Stretch Cells */
+    .cell.bg-red { background: var(--red-main); border-color: rgba(0,0,0,0.12); }
+    .cell.bg-green { background: var(--green-main); border-color: rgba(0,0,0,0.12); }
+    .cell.bg-yellow { background: var(--yellow-main); border-color: rgba(0,0,0,0.12); }
+    .cell.bg-blue { background: var(--blue-main); border-color: rgba(0,0,0,0.12); }
+
+    /* Safe Star Icon */
+    .cell.safe-tile::after {
+      content: '★';
+      font-size: clamp(11px, 2.5vw, 18px);
+      color: var(--safe-star-color);
+      opacity: 0.65;
+      pointer-events: none;
+    }
+    .cell.bg-red.safe-tile::after,
+    .cell.bg-green.safe-tile::after,
+    .cell.bg-yellow.safe-tile::after,
+    .cell.bg-blue.safe-tile::after {
+      color: rgba(255, 255, 255, 0.85);
+    }
+
+    /* 4 Corner Home Yards (6x6 overlays) */
+    .home-yard {
+      position: absolute;
+      width: 40%;
+      height: 40%;
+      padding: 10%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 2;
+    }
+    .yard-red { top: 0; left: 0; background: linear-gradient(135deg, var(--red-main), var(--red-dark)); }
+    .yard-green { top: 0; right: 0; background: linear-gradient(135deg, var(--green-main), var(--green-dark)); }
+    .yard-yellow { bottom: 0; right: 0; background: linear-gradient(135deg, var(--yellow-main), var(--yellow-dark)); }
+    .yard-blue { bottom: 0; left: 0; background: linear-gradient(135deg, var(--blue-main), var(--blue-dark)); }
+
+    .yard-inner {
+      width: 100%;
+      height: 100%;
+      background: #ffffff;
+      border-radius: 18%;
+      box-shadow: inset 0 4px 10px rgba(0, 0, 0, 0.25), 0 4px 12px rgba(0, 0, 0, 0.2);
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      grid-template-rows: repeat(2, 1fr);
+      place-items: center;
+      padding: 12%;
+    }
+
+    .yard-spot {
+      width: 68%;
+      height: 68%;
+      border-radius: 50%;
+      box-shadow: inset 0 3px 6px rgba(0, 0, 0, 0.25);
+    }
+    .yard-red .yard-spot { background: var(--red-light); border: 2px solid var(--red-main); }
+    .yard-green .yard-spot { background: var(--green-light); border: 2px solid var(--green-main); }
+    .yard-yellow .yard-spot { background: var(--yellow-light); border: 2px solid var(--yellow-main); }
+    .yard-blue .yard-spot { background: var(--blue-light); border: 2px solid var(--blue-main); }
+
+    /* Center 3x3 Home Finish Zone */
+    .center-home {
+      position: absolute;
+      top: 40%;
+      left: 40%;
+      width: 20%;
+      height: 20%;
+      z-index: 2;
+      overflow: hidden;
+      box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.35);
+    }
+
+    /* Token Layer & Glossy 3D Cartoon Pawns */
+    .tokens-layer {
+      position: absolute;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .token {
+      position: absolute;
+      width: 6.2%;
+      height: 6.2%;
+      transform: translate(-50%, -58%);
+      transition: left 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), top 0.16s cubic-bezier(0.34, 1.56, 0.64, 1), transform 0.15s ease;
+      pointer-events: auto;
+      cursor: default;
+      filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.45));
+    }
+
+    .token.hopping {
+      transform: translate(-50%, -88%) scale(1.22);
+    }
+
+    .token.movable {
+      cursor: pointer;
+      z-index: 25 !important;
+      animation: tokenBounce 0.65s ease-in-out infinite alternate;
+    }
+
+    .token.movable::after {
+      content: '';
+      position: absolute;
+      inset: -5px;
+      border-radius: 50%;
+      border: 3px solid #ffffff;
+      box-shadow: 0 0 12px #fbbf24;
+      animation: ringExpand 0.9s infinite;
+    }
+
+    @keyframes tokenBounce {
+      0% { transform: translate(-50%, -58%) scale(1.05); }
+      100% { transform: translate(-50%, -82%) scale(1.22); }
+    }
+
+    @keyframes ringExpand {
+      0% { transform: scale(0.85); opacity: 1; }
+      100% { transform: scale(1.35); opacity: 0; }
+    }
+
+    /* Particle & Confetti Layer */
+    .fx-layer {
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      z-index: 60;
+      overflow: hidden;
+    }
+
+    .particle {
+      position: absolute;
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      animation: particleBurst 0.65s ease-out forwards;
+    }
+
+    @keyframes particleBurst {
+      0% { transform: translate(0, 0) scale(1); opacity: 1; }
+      100% { transform: translate(var(--dx), var(--dy)) scale(0); opacity: 0; }
+    }
+
+    .confetti {
+      position: absolute;
+      width: 10px;
+      height: 16px;
+      top: -20px;
+      animation: confettiFall linear forwards;
+    }
+
+    @keyframes confettiFall {
+      0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(105vh) rotate(720deg); opacity: 0.85; }
+    }
+
+    /* Toast Message */
+    .toast-banner {
+      position: fixed;
+      top: 72px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-20px);
+      background: rgba(15, 23, 42, 0.94);
+      border: 2px solid #fbbf24;
+      color: #fde047;
+      padding: 8px 18px;
+      border-radius: 999px;
+      font-weight: 800;
+      font-size: 0.88rem;
+      z-index: 45;
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.5);
+      white-space: nowrap;
+    }
+    .toast-banner.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-pattern"></div>
+  <div class="fx-layer" id="fxLayer"></div>
+  <div class="toast-banner" id="toastBanner">Bonus Roll!</div>
+
+  <!-- ========================================================================
+       SCREEN 1: PREMIUM GAMING HOME SCREEN
+       ======================================================================== -->
+  <section class="screen" id="homeScreen">
+    <div class="home-top-bar">
+      <div class="profile-pill" id="openProfilePill" title="View Player Profile">
+        <div class="profile-avatar-circle" id="homeAvatar">👑</div>
+        <div class="profile-pill-info">
+          <span class="profile-pill-name" id="homePlayerName">King Player</span>
+          <span class="profile-pill-score">⭐ <span id="homePlayerScore">0</span> PTS</span>
+        </div>
+      </div>
+
+      <div class="home-quick-actions">
+        <button class="btn-3d btn-blue btn-icon" id="quickSoundBtn" title="Toggle Sound">🔊</button>
+        <button class="btn-3d btn-purple btn-icon" id="quickThemeBtn" title="Cycle Theme">🎨</button>
+      </div>
+    </div>
+
+    <!-- 3D Cartoon LUDO KING Crown & Shield Logo -->
+    <div class="logo-showcase">
+      <svg class="logo-shield" viewBox="0 0 320 220" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <linearGradient id="goldCrown" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#fef08a"/>
+            <stop offset="50%" stop-color="#f59e0b"/>
+            <stop offset="100%" stop-color="#b45309"/>
+          </linearGradient>
+          <linearGradient id="shieldBg" x1="0" y1="0" x2="1" y2="1">
+            <stop offset="0%" stop-color="#1e1b4b"/>
+            <stop offset="100%" stop-color="#0f172a"/>
+          </linearGradient>
+          <linearGradient id="textGold" x1="0" y1="0" x2="0" y2="1">
+            <stop offset="0%" stop-color="#ffffff"/>
+            <stop offset="45%" stop-color="#fde047"/>
+            <stop offset="100%" stop-color="#f59e0b"/>
+          </linearGradient>
+        </defs>
+        <!-- Crown -->
+        <path d="M90 68 L105 24 L138 50 L160 14 L182 50 L215 24 L230 68 Z" fill="url(#goldCrown)" stroke="#78350f" stroke-width="4" stroke-linejoin="round"/>
+        <circle cx="105" cy="22" r="6" fill="#ef4444" stroke="#fff" stroke-width="2"/>
+        <circle cx="160" cy="12" r="7" fill="#3b82f6" stroke="#fff" stroke-width="2"/>
+        <circle cx="215" cy="22" r="6" fill="#22c55e" stroke="#fff" stroke-width="2"/>
+        <!-- Main Emblem Shield -->
+        <rect x="24" y="64" width="272" height="132" rx="34" fill="url(#shieldBg)" stroke="url(#goldCrown)" stroke-width="8"/>
+        <!-- 4 Colored Corner Gems -->
+        <circle cx="52" cy="92" r="10" fill="#ef4444"/>
+        <circle cx="268" cy="92" r="10" fill="#22c55e"/>
+        <circle cx="52" cy="168" r="10" fill="#3b82f6"/>
+        <circle cx="268" cy="168" r="10" fill="#eab308"/>
+        <!-- Title Typography -->
+        <text x="160" y="128" text-anchor="middle" font-size="48" font-weight="900" fill="url(#textGold)" stroke="#78350f" stroke-width="3" letter-spacing="2">LUDO</text>
+        <text x="160" y="174" text-anchor="middle" font-size="40" font-weight="900" fill="#ffffff" stroke="#1e3a8a" stroke-width="2.5" letter-spacing="4">KING</text>
+      </svg>
+      <div class="logo-subtitle">Offline Royal Edition</div>
+    </div>
+
+    <!-- Main Action Card -->
+    <div class="home-menu-card">
+      <button class="btn-3d btn-gold home-play-btn" id="openSetupBtn">
+        ▶ PLAY GAME
+      </button>
+      <div class="home-sub-grid">
+        <button class="btn-3d btn-green" id="quickVsAiBtn">🤖 VS COMPUTER</button>
+        <button class="btn-3d btn-blue" id="quickPassPlayBtn">👥 PASS &amp; PLAY</button>
+        <button class="btn-3d btn-purple" id="openProfileBtn">🏆 PROFILE</button>
+        <button class="btn-3d btn-red" id="openSettingsBtn">⚙️ SETTINGS</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       SCREEN 2: GAMEPLAY SCREEN
+       ======================================================================== -->
+  <section class="screen game-screen hidden" id="gameScreen">
+    <!-- Top Controls -->
+    <div class="game-header">
+      <button class="btn-3d btn-red btn-icon" id="exitGameBtn" title="Exit to Menu">🏠</button>
+      <div class="turn-banner" id="turnBanner">Red's Turn - Roll Dice!</div>
+      <button class="btn-3d btn-blue btn-icon" id="inGameSoundBtn" title="Toggle Sound">🔊</button>
+    </div>
+
+    <!-- Top Player Pods: Red (Top-Left) & Green (Top-Right) -->
+    <div class="pods-row">
+      <div class="player-pod" id="pod-red" data-color="red">
+        <div class="pod-meta">
+          <span class="pod-name" id="podName-red">Player 1</span>
+          <span class="pod-sub" id="podSub-red">Home: 0/4</span>
+        </div>
+        <div class="dice-box" id="diceBox-red"></div>
+      </div>
+
+      <div class="player-pod" id="pod-green" data-color="green">
+        <div class="dice-box" id="diceBox-green"></div>
+        <div class="pod-meta" style="text-align:right;">
+          <span class="pod-name" id="podName-green">Player 2</span>
+          <span class="pod-sub" id="podSub-green">Home: 0/4</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center 15x15 Ludo Board -->
+    <div class="board-wrapper">
+      <div class="ludo-board" id="ludoBoard">
+        <!-- 4 Corner Yards -->
+        <div class="home-yard yard-red">
+          <div class="yard-inner">
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+          </div>
+        </div>
+        <div class="home-yard yard-green">
+          <div class="yard-inner">
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+          </div>
+        </div>
+        <div class="home-yard yard-yellow">
+          <div class="yard-inner">
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+          </div>
+        </div>
+        <div class="home-yard yard-blue">
+          <div class="yard-inner">
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+            <div class="yard-spot"></div><div class="yard-spot"></div>
+          </div>
+        </div>
+
+        <!-- Center Home Finish Triangles -->
+        <div class="center-home">
+          <svg viewBox="0 0 100 100" width="100%" height="100%" preserveAspectRatio="none">
+            <polygon points="0,0 50,50 0,100" fill="#ef4444"/>
+            <polygon points="0,0 100,0 50,50" fill="#22c55e"/>
+            <polygon points="100,0 100,100 50,50" fill="#eab308"/>
+            <polygon points="0,100 100,100 50,50" fill="#3b82f6"/>
+            <circle cx="50" cy="50" r="14" fill="#ffffff" stroke="#f59e0b" stroke-width="3"/>
+            <text x="50" y="55" text-anchor="middle" font-size="14">👑</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Dynamic Tokens Layer -->
+      <div class="tokens-layer" id="tokensLayer"></div>
+    </div>
+
+    <!-- Bottom Player Pods: Blue (Bottom-Left) & Yellow (Bottom-Right) -->
+    <div class="pods-row">
+      <div class="player-pod" id="pod-blue" data-color="blue">
+        <div class="pod-meta">
+          <span class="pod-name" id="podName-blue">Player 4</span>
+          <span class="pod-sub" id="podSub-blue">Home: 0/4</span>
+        </div>
+        <div class="dice-box" id="diceBox-blue"></div>
+      </div>
+
+      <div class="player-pod" id="pod-yellow" data-color="yellow">
+        <div class="dice-box" id="diceBox-yellow"></div>
+        <div class="pod-meta" style="text-align:right;">
+          <span class="pod-name" id="podName-yellow">Player 3</span>
+          <span class="pod-sub" id="podSub-yellow">Home: 0/4</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ========================================================================
+       MODAL 1: GAME SETUP (PLAYERS, MODES, COLORS, AI/HUMAN)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="setupModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">🎮 Match Setup</div>
+        <button class="modal-close" data-close="setupModal">✕</button>
+      </div>
+
+      <div style="font-size:0.8rem; font-weight:700; color:#94a3b8; margin-bottom:6px;">SELECT NUMBER OF PLAYERS</div>
+      <div class="mode-selector" id="playerCountSelector">
+        <button class="mode-btn" data-count="2">2 Players</button>
+        <button class="mode-btn" data-count="3">3 Players</button>
+        <button class="mode-btn active" data-count="4">4 Players</button>
+      </div>
+
+      <div class="preset-row">
+        <button class="preset-chip" id="presetVsComputer">🤖 Solo vs AI</button>
+        <button class="preset-chip" id="presetPassPlay">👥 All Pass &amp; Play</button>
+      </div>
+
+      <div style="font-size:0.76rem; color:#cbd5e1; margin-bottom:8px;">
+        Tap color circle to swap color • Tap badge to toggle Human / AI
+      </div>
+
+      <div class="player-slot-list" id="playerSlotList"></div>
+
+      <button class="btn-3d btn-green" style="width:100%; font-size:1.1rem;" id="startGameConfirmBtn">
+        🚀 START MATCH
+      </button>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: PLAYER PROFILE & HISTORY
+       ======================================================================== -->
+  <div class="modal-backdrop" id="profileModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">👑 Player Profile</div>
+        <button class="modal-close" data-close="profileModal">✕</button>
+      </div>
+
+      <div style="text-align:center;">
+        <div style="font-size:0.8rem; color:#94a3b8; font-weight:700;">CHOOSE AVATAR</div>
+        <div class="avatar-picker" id="avatarPicker">
+          <button class="avatar-opt" data-avatar="👑">👑</button>
+          <button class="avatar-opt" data-avatar="🦁">🦁</button>
+          <button class="avatar-opt" data-avatar="🐉">🐉</button>
+          <button class="avatar-opt" data-avatar="🚀">🚀</button>
+          <button class="avatar-opt" data-avatar="💎">💎</button>
+        </div>
+
+        <div style="margin-top:12px;">
+          <input type="text" id="profileNameInput" class="slot-name-input" style="text-align:center; font-size:1rem; width:80%;" maxlength="16" placeholder="Enter Your Name" />
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-box">
+          <div class="stat-val" id="statScore">0</div>
+          <div class="stat-lbl">Score</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statWins" style="color:#4ade80;">0</div>
+          <div class="stat-lbl">Wins</div>
+        </div>
+        <div class="stat-box">
+          <div class="stat-val" id="statLosses" style="color:#f87171;">0</div>
+          <div class="stat-lbl">Losses</div>
+        </div>
+      </div>
+
+      <div style="font-size:0.82rem; font-weight:800; color:#cbd5e1; margin-bottom:8px;">RECENT MATCH HISTORY</div>
+      <div class="history-list" id="historyList">
+        <div style="text-align:center; color:#64748b; padding:16px; font-size:0.85rem;">No matches played yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 3: GAME SETTINGS & THEMES
+       ======================================================================== -->
+  <div class="modal-backdrop" id="settingsModal">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="modal-title">⚙️ Game Settings</div>
+        <button class="modal-close" data-close="settingsModal">✕</button>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div style="font-weight:800;">🔊 Sound Effects</div>
+          <div style="font-size:0.75rem; color:#94a3b8;">Dice rolls, steps, captures &amp; fanfare</div>
+        </div>
+        <button class="btn-3d btn-green" style="padding:8px 16px; font-size:0.85rem;" id="toggleSfxBtn">ON</button>
+      </div>
+
+      <div class="setting-row">
+        <div>
+          <div style="font-weight:800;">🎵 Background Music</div>
+          <div style="font-size:0.75rem; color:#94a3b8;">Offline chiptune marimba melody</div>
+        </div>
+        <button class="btn-3d btn-blue" style="padding:8px 16px; font-size:0.85rem;" id="toggleMusicBtn">OFF</button>
+      </div>
+
+      <div style="margin-top:14px;">
+        <div style="font-weight:800; font-size:0.9rem;">🎨 Board &amp; Arena Theme</div>
+        <div class="theme-grid" id="themeGrid">
+          <button class="theme-option active" data-theme="classic">👑 Classic Royal</button>
+          <button class="theme-option" data-theme="neon">⚡ Neon Cyber</button>
+          <button class="theme-option" data-theme="wood">🪵 Wooden Gold</button>
+          <button class="theme-option" data-theme="candy">🍬 Pastel Candy</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 4: WINNER CELEBRATION PODIUM
+       ======================================================================== -->
+  <div class="modal-backdrop" id="winnerModal">
+    <div class="modal-card" style="text-align:center;">
+      <div style="font-size:3.5rem; margin-bottom:4px;">🏆</div>
+      <div style="font-size:1.6rem; font-weight:900; color:#fbbf24; margin-bottom:6px;" id="winnerHeadline">VICTORY!</div>
+      <div style="font-size:0.95rem; color:#cbd5e1; margin-bottom:16px;" id="winnerSubtext">Player 1 wins the royal crown!</div>
+
+      <div id="podiumList" style="display:flex; flex-direction:column; gap:8px; margin-bottom:18px;"></div>
+
+      <div style="display:flex; gap:10px;">
+        <button class="btn-3d btn-blue" style="flex:1;" id="winnerHomeBtn">🏠 Home</button>
+        <button class="btn-3d btn-green" style="flex:1;" id="winnerRematchBtn">🔄 Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 5: CONFIRM EXIT MATCH (CUSTOM IN-APP DIALOG)
+       ======================================================================== -->
+  <div class="modal-backdrop" id="confirmExitModal">
+    <div class="modal-card" style="text-align:center; max-width:360px;">
+      <div style="font-size:2.4rem; margin-bottom:6px;">⚠️</div>
+      <div style="font-size:1.2rem; font-weight:900; color:#fbbf24; margin-bottom:8px;">Leave Current Match?</div>
+      <div style="font-size:0.88rem; color:#cbd5e1; margin-bottom:18px;">Your current game progress will be lost.</div>
+      <div style="display:flex; gap:10px;">
+        <button class="btn-3d btn-blue" style="flex:1;" data-close="confirmExitModal">Cancel</button>
+        <button class="btn-3d btn-red" style="flex:1;" id="confirmExitYesBtn">Leave</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /* ==========================================================================
+       1. WEB AUDIO API SYNTHESIZER (100% OFFLINE SFX & BACKGROUND MUSIC)
+       ========================================================================== */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.sfxEnabled = true;
+        this.musicEnabled = false;
+        this.musicTimer = null;
+        this.noteIndex = 0;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      playTone(freq, type, duration, vol = 0.15, delay = 0) {
+        if (!this.sfxEnabled) return;
+        this.init();
+        if (!this.ctx) return;
+
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+
+      playDiceRoll() {
+        if (!this.sfxEnabled) return;
+        for (let i = 0; i < 6; i++) {
+          this.playTone(180 + Math.random() * 240, 'triangle', 0.06, 0.12, i * 0.065);
+        }
+      }
+
+      playStep() {
+        this.playTone(520, 'sine', 0.08, 0.14);
+      }
+
+      playDeploy() {
+        this.playTone(440, 'triangle', 0.12, 0.16, 0);
+        this.playTone(659.25, 'triangle', 0.18, 0.18, 0.09);
+      }
+
+      playSafeStar() {
+        this.playTone(784, 'sine', 0.12, 0.14, 0);
+        this.playTone(1046.5, 'sine', 0.22, 0.14, 0.08);
+      }
+
+      playCapture() {
+        if (!this.sfxEnabled) return;
+        this.init();
+        if (!this.ctx) return;
+        const now = this.ctx.currentTime;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(420, now);
+        osc.frequency.exponentialRampToValueAtTime(75, now + 0.35);
+        gain.gain.setValueAtTime(0.22, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.36);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + 0.36);
+      }
+
+      playTripleSix() {
+        this.playTone(220, 'sawtooth', 0.18, 0.16, 0);
+        this.playTone(165, 'sawtooth', 0.28, 0.16, 0.16);
+      }
+
+      playHomeGoal() {
+        const notes = [523.25, 659.25, 783.99, 1046.5];
+        notes.forEach((n, idx) => this.playTone(n, 'triangle', 0.18, 0.16, idx * 0.08));
+      }
+
+      playWinFanfare() {
+        const melody = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+        const times = [0, 0.12, 0.24, 0.36, 0.52, 0.66];
+        melody.forEach((n, i) => this.playTone(n, 'triangle', 0.28, 0.2, times[i]));
+      }
+
+      toggleMusic(enable) {
+        this.musicEnabled = enable;
+        if (this.musicTimer) {
+          clearInterval(this.musicTimer);
+          this.musicTimer = null;
+        }
+        if (this.musicEnabled) {
+          this.init();
+          const scale = [261.63, 329.63, 392.00, 523.25, 392.00, 329.63, 293.66, 392.00];
+          this.musicTimer = setInterval(() => {
+            if (!this.musicEnabled) return;
+            if (!this.ctx) this.init();
+            if (!this.ctx) return;
+            const freq = scale[this.noteIndex % scale.length];
+            this.noteIndex++;
+            const now = this.ctx.currentTime;
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(freq, now);
+            gain.gain.setValueAtTime(0.04, now);
+            gain.gain.exponentialRampToValueAtTime(0.0008, now + 0.32);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(now);
+            osc.stop(now + 0.33);
+          }, 380);
+        }
+      }
+    }
+
+    const audio = new SoundEngine();
+
+    /* ==========================================================================
+       2. BOARD COORDINATES & REAL LUDO PATH MAPPING (15x15 GRID)
+       ========================================================================== */
+    const COLORS = ['red', 'green', 'yellow', 'blue'];
+    const COLOR_HEX = {
+      red: '#ef4444',
+      green: '#22c55e',
+      yellow: '#eab308',
+      blue: '#3b82f6'
+    };
+
+    // 52 Main Outer Perimeter Tiles (row, col from 0..14) starting at Red's start square (6, 1)
+    const MAIN_TRACK = [
+      [6,1], [6,2], [6,3], [6,4], [6,5],             // 0..4 (Red arm right)
+      [5,6], [4,6], [3,6], [2,6], [1,6], [0,6],      // 5..10 (Green arm up)
+      [0,7], [0,8],                                  // 11..12 (Top turn)
+      [1,8], [2,8], [3,8], [4,8], [5,8],             // 13..17 (Green start at 13)
+      [6,9], [6,10], [6,11], [6,12], [6,13], [6,14], // 18..23 (Yellow arm right)
+      [7,14], [8,14],                                // 24..25 (Right turn)
+      [8,13], [8,12], [8,11], [8,10], [8,9],         // 26..30 (Yellow start at 26)
+      [9,8], [10,8], [11,8], [12,8], [13,8], [14,8], // 31..36 (Blue arm down)
+      [14,7], [14,6],                                // 37..38 (Bottom turn)
+      [13,6], [12,6], [11,6], [10,6], [9,6],         // 39..43 (Blue start at 39)
+      [8,5], [8,4], [8,3], [8,2], [8,1], [8,0],      // 44..49 (Red arm left)
+      [7,0], [6,0]                                   // 50..51 (Left turn)
+    ];
+
+    // Starting Track Index for each color
+    const START_OFFSET = {
+      red: 0,
+      green: 13,
+      yellow: 26,
+      blue: 39
+    };
+
+    // 8 Star Safe Zones (4 colored start squares + 4 star squares)
+    const SAFE_TRACK_INDICES = new Set([0, 8, 13, 21, 26, 34, 39, 47]);
+
+    // 5 Home Stretch Colored Tiles + 1 Final Center Goal (steps 51..56)
+    const HOME_STRETCH = {
+      red:    [[7,1], [7,2], [7,3], [7,4], [7,5], [7,6]],
+      green:  [[1,7], [2,7], [3,7], [4,7], [5,7], [6,7]],
+      yellow: [[7,13], [7,12], [7,11], [7,10], [7,9], [7,8]],
+      blue:   [[13,7], [12,7], [11,7], [10,7], [9,7], [8,7]]
+    };
+
+    // Home Yard Resting Coordinates (percentages inside the 15x15 board)
+    const YARD_COORDS = {
+      red:    [[14.2, 14.2], [25.8, 14.2], [14.2, 25.8], [25.8, 25.8]],
+      green:  [[74.2, 14.2], [85.8, 14.2], [74.2, 25.8], [85.8, 25.8]],
+      yellow: [[74.2, 74.2], [85.8, 74.2], [74.2, 85.8], [85.8, 85.8]],
+      blue:   [[14.2, 74.2], [25.8, 74.2], [14.2, 85.8], [25.8, 85.8]]
+    };
+
+    // Final Home Triangle Center Offsets
+    const GOAL_COORDS = {
+      red:    [43.5, 50],
+      green:  [50, 43.5],
+      yellow: [56.5, 50],
+      blue:   [50, 56.5]
+    };
+
+    /* ==========================================================================
+       3. LOCALSTORAGE PROFILE & SETTINGS PERSISTENCE
+       ========================================================================== */
+    const STORAGE_KEY = 'ludo_king_offline_v1';
+    let userData = {
+      name: 'King Player',
+      avatar: '👑',
+      score: 0,
+      wins: 0,
+      losses: 0,
+      theme: 'classic',
+      sfx: true,
+      music: false,
+      history: []
+    };
+
+    function loadUserData() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          userData = { ...userData, ...JSON.parse(raw) };
+        }
+      } catch (e) {
+        console.warn('Storage unavailable', e);
+      }
+      audio.sfxEnabled = userData.sfx;
+      applyTheme(userData.theme, false);
+      updateProfileUI();
+      updateSettingsUI();
+    }
+
+    function saveUserData() {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData));
+      } catch (e) {
+        console.warn('Could not save data', e);
+      }
+      updateProfileUI();
+    }
+
+    /* ==========================================================================
+       4. MATCH SETUP STATE
+       ========================================================================== */
+    let setupState = {
+      playerCount: 4,
+      slots: [
+        { color: 'red',    name: 'King Player', isAI: false, active: true },
+        { color: 'green',  name: 'Bot Leo',     isAI: true,  active: true },
+        { color: 'yellow', name: 'Bot Maya',    isAI: true,  active: true },
+        { color: 'blue',   name: 'Bot Max',     isAI: true,  active: true }
+      ]
+    };
+
+    /* ==========================================================================
+       5. CORE GAMEPLAY STATE
+       ========================================================================== */
+    let game = {
+      active: false,
+      players: [],         // Ordered active players
+      turnIndex: 0,        // Index in game.players
+      diceValue: 1,
+      hasRolled: false,
+      isAnimating: false,
+      consecutiveSixes: 0,
+      movableTokenIds: [],
+      rankings: []
+    };
+
+    /* ==========================================================================
+       6. INITIALIZE BOARD CELLS & 3D DICE CUBES
+       ========================================================================== */
+    function buildBoardGrid() {
+      const board = document.getElementById('ludoBoard');
+      // Keep the 4 yards and center-home already inside ludoBoard, append 225 cells
+      for (let r = 0; r < 15; r++) {
+        for (let c = 0; c < 15; c++) {
+          const cell = document.createElement('div');
+          cell.className = 'cell';
+          cell.dataset.r = r;
+          cell.dataset.c = c;
+
+          // Highlight Colored Starting Squares
+          if (r === 6 && c === 1) cell.classList.add('bg-red', 'safe-tile');
+          else if (r === 1 && c === 8) cell.classList.add('bg-green', 'safe-tile');
+          else if (r === 8 && c === 13) cell.classList.add('bg-yellow', 'safe-tile');
+          else if (r === 13 && c === 6) cell.classList.add('bg-blue', 'safe-tile');
+
+          // Highlight Other 4 Star Safe Tiles
+          else if ((r === 2 && c === 6) || (r === 6 && c === 12) || (r === 12 && c === 8) || (r === 8 && c === 2)) {
+            cell.classList.add('safe-tile');
+          }
+
+          // Highlight Colored Home Stretches
+          else if (r === 7 && c >= 1 && c <= 5) cell.classList.add('bg-red');
+          else if (c === 7 && r >= 1 && r <= 5) cell.classList.add('bg-green');
+          else if (r === 7 && c >= 9 && c <= 13) cell.classList.add('bg-yellow');
+          else if (c === 7 && r >= 9 && r <= 13) cell.classList.add('bg-blue');
+
+          board.appendChild(cell);
+        }
+      }
+    }
+
+    function createDiceHTML(color) {
+      // Builds a 6-sided 3D CSS dice cube
+      const pipLayouts = {
+        1: [4],
+        2: [2, 6],
+        3: [2, 4, 6],
+        4: [0, 2, 6, 8],
+        5: [0, 2, 4, 6, 8],
+        6: [0, 2, 3, 5, 6, 8]
+      };
+      let facesHTML = '';
+      for (let face = 1; face <= 6; face++) {
+        let cells = '';
+        for (let i = 0; i < 9; i++) {
+          if (pipLayouts[face].includes(i)) {
+            const extra = (face === 1 || face === 6) ? 'red-pip' : '';
+            cells += `<span class="pip ${extra}"></span>`;
+          } else {
+            cells += `<span></span>`;
+          }
+        }
+        facesHTML += `<div class="dice-face face-${face}">${cells}</div>`;
+      }
+      return `<div class="dice-cube" id="diceCube-${color}">${facesHTML}</div>`;
+    }
+
+    function initDiceBoxes() {
+      COLORS.forEach(color => {
+        const box = document.getElementById(`diceBox-${color}`);
+        box.innerHTML = createDiceHTML(color);
+        box.addEventListener('click', () => handleDiceClick(color));
+      });
+    }
+
+    /* ==========================================================================
+       7. SETUP MODAL & UI INTERACTIONS
+       ========================================================================== */
+    function renderSetupSlots() {
+      const list = document.getElementById('playerSlotList');
+      list.innerHTML = '';
+
+      // Enforce active slots based on playerCount
+      // For 2 players: use opposite corners (slot 0 and slot 2) for fair diagonal play!
+      setupState.slots.forEach((slot, idx) => {
+        if (setupState.playerCount === 2) {
+          slot.active = (idx === 0 || idx === 2);
+        } else if (setupState.playerCount === 3) {
+          slot.active = (idx < 3);
+        } else {
+          slot.active = true;
+        }
+      });
+
+      setupState.slots.forEach((slot, idx) => {
+        const row = document.createElement('div');
+        row.className = `player-slot-row ${slot.active ? '' : 'disabled'}`;
+
+        const badge = document.createElement('div');
+        badge.className = 'slot-color-badge';
+        badge.style.background = COLOR_HEX[slot.color];
+        badge.title = 'Tap to swap color';
+        badge.addEventListener('click', () => cycleSlotColor(idx));
+
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.className = 'slot-name-input';
+        input.value = slot.name;
+        input.maxLength = 14;
+        input.addEventListener('input', (e) => {
+          slot.name = e.target.value.trim() || `Player ${idx + 1}`;
+        });
+
+        const toggle = document.createElement('button');
+        toggle.className = `slot-type-toggle ${slot.isAI ? 'ai' : 'human'}`;
+        toggle.textContent = slot.isAI ? '🤖 BOT' : '👤 HUMAN';
+        toggle.addEventListener('click', () => {
+          slot.isAI = !slot.isAI;
+          if (slot.isAI && !slot.name.startsWith('Bot')) {
+            const botNames = ['Bot Leo', 'Bot Maya', 'Bot Max', 'Bot Nova'];
+            slot.name = botNames[idx];
+          } else if (!slot.isAI && slot.name.startsWith('Bot')) {
+            slot.name = idx === 0 ? userData.name : `Player ${idx + 1}`;
+          }
+          renderSetupSlots();
+        });
+
+        row.appendChild(badge);
+        row.appendChild(input);
+        row.appendChild(toggle);
+        list.appendChild(row);
+      });
+
+      document.querySelectorAll('#playerCountSelector .mode-btn').forEach(btn => {
+        btn.classList.toggle('active', Number(btn.dataset.count) === setupState.playerCount);
+      });
+    }
+
+    function cycleSlotColor(slotIndex) {
+      const currentColor = setupState.slots[slotIndex].color;
+      const nextColor = COLORS[(COLORS.indexOf(currentColor) + 1) % COLORS.length];
+      // Swap colors with whichever slot currently owns nextColor
+      const otherSlot = setupState.slots.find(s => s.color === nextColor);
+      if (otherSlot) {
+        otherSlot.color = currentColor;
+      }
+      setupState.slots[slotIndex].color = nextColor;
+      renderSetupSlots();
+    }
+
+    /* ==========================================================================
+       8. START MATCH & TOKEN CREATION
+       ========================================================================== */
+    function startMatch() {
+      audio.init();
+      closeAllModals();
+
+      // Build active players in clockwise board order: red -> green -> yellow -> blue
+      const activeSlots = setupState.slots.filter(s => s.active);
+      activeSlots.sort((a, b) => COLORS.indexOf(a.color) - COLORS.indexOf(b.color));
+
+      game.players = activeSlots.map(slot => ({
+        color: slot.color,
+        name: slot.name || slot.color.toUpperCase(),
+        isAI: slot.isAI,
+        finishedCount: 0,
+        tokens: [0, 1, 2, 3].map(i => ({
+          id: `${slot.color}-${i}`,
+          color: slot.color,
+          index: i,
+          steps: -1 // -1 = In Yard, 0..50 = Main Track, 51..55 = Home Stretch, 56 = Finished Home!
+        }))
+      }));
+
+      game.active = true;
+      game.turnIndex = 0;
+      game.diceValue = 1;
+      game.hasRolled = false;
+      game.isAnimating = false;
+      game.consecutiveSixes = 0;
+      game.movableTokenIds = [];
+      game.rankings = [];
+
+      // Configure Pods Visibility
+      COLORS.forEach(color => {
+        const pod = document.getElementById(`pod-${color}`);
+        const player = game.players.find(p => p.color === color);
+        if (player) {
+          pod.classList.remove('inactive-slot');
+          document.getElementById(`podName-${color}`).textContent = `${player.isAI ? '🤖 ' : ''}${player.name}`;
+          document.getElementById(`podSub-${color}`).textContent = 'Home: 0/4';
+        } else {
+          pod.classList.add('inactive-slot');
+        }
+      });
+
+      renderAllTokens();
+
+      document.getElementById('homeScreen').classList.add('hidden');
+      document.getElementById('gameScreen').classList.remove('hidden');
+
+      beginTurn();
+    }
+
+    /* ==========================================================================
+       9. TOKEN RENDERING & COORDINATE CALCULATION
+       ========================================================================== */
+    function getTokenBoardCoords(token) {
+      if (token.steps === -1) {
+        const [x, y] = YARD_COORDS[token.color][token.index];
+        return { x, y };
+      }
+      if (token.steps >= 56) {
+        const [gx, gy] = GOAL_COORDS[token.color];
+        const spread = (token.index - 1.5) * 1.6;
+        if (token.color === 'red' || token.color === 'yellow') {
+          return { x: gx, y: gy + spread };
+        }
+        return { x: gx + spread, y: gy };
+      }
+
+      let r, c;
+      if (token.steps <= 50) {
+        const trackIdx = (START_OFFSET[token.color] + token.steps) % 52;
+        [r, c] = MAIN_TRACK[trackIdx];
+      } else {
+        const stretchIdx = token.steps - 51;
+        [r, c] = HOME_STRETCH[token.color][stretchIdx];
+      }
+
+      // Convert 15x15 row/col to percentage center
+      const cellSize = 100 / 15;
+      return {
+        x: (c + 0.5) * cellSize,
+        y: (r + 0.5) * cellSize
+      };
+    }
+
+    function createPawnSVG(color) {
+      const cMap = {
+        red:    { top: '#fca5a5', mid: '#ef4444', bot: '#991b1b' },
+        green:  { top: '#86efac', mid: '#22c55e', bot: '#166534' },
+        yellow: { top: '#fef08a', mid: '#eab308', bot: '#854d0e' },
+        blue:   { top: '#93c5fd', mid: '#3b82f6', bot: '#1e40af' }
+      }[color];
+
+      return `
+        <svg viewBox="0 0 64 76" width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <radialGradient id="grad-${color}" cx="35%" cy="25%" r="70%">
+              <stop offset="0%" stop-color="${cMap.top}"/>
+              <stop offset="55%" stop-color="${cMap.mid}"/>
+              <stop offset="100%" stop-color="${cMap.bot}"/>
+            </radialGradient>
+          </defs>
+          <!-- Base Skirt -->
+          <path d="M12 64 C12 46, 22 36, 32 36 C42 36, 52 46, 52 64 Z" fill="url(#grad-${color})" stroke="#ffffff" stroke-width="3.5"/>
+          <!-- Pawn Head -->
+          <circle cx="32" cy="22" r="15" fill="url(#grad-${color})" stroke="#ffffff" stroke-width="3.5"/>
+          <!-- Glossy Specular Highlight -->
+          <ellipse cx="26" cy="16" rx="5" ry="3" transform="rotate(-25 26 16)" fill="rgba(255,255,255,0.75)"/>
+        </svg>
+      `;
+    }
+
+    function renderAllTokens() {
+      const layer = document.getElementById('tokensLayer');
+      layer.innerHTML = '';
+
+      // Group tokens that share the same tile so they fan out cleanly
+      const tileGroups = {};
+      game.players.forEach(p => {
+        p.tokens.forEach(t => {
+          const coords = getTokenBoardCoords(t);
+          const key = `${coords.x.toFixed(1)},${coords.y.toFixed(1)}`;
+          if (!tileGroups[key]) tileGroups[key] = [];
+          tileGroups[key].push({ token: t, coords });
+        });
+      });
+
+      Object.values(tileGroups).forEach(group => {
+        group.forEach((item, idx) => {
+          const { token, coords } = item;
+          const el = document.createElement('div');
+          el.className = 'token';
+          el.id = `token-${token.id}`;
+          el.innerHTML = createPawnSVG(token.color);
+
+          // Offset stacked tokens on the same square
+          let offsetX = 0;
+          let offsetY = 0;
+          let scale = 1;
+          if (group.length > 1 && token.steps >= 0 && token.steps < 56) {
+            const angle = (idx / group.length) * Math.PI * 2;
+            offsetX = Math.cos(angle) * 1.45;
+            offsetY = Math.sin(angle) * 1.45;
+            scale = 0.85;
+          }
+
+          el.style.left = `${coords.x + offsetX}%`;
+          el.style.top = `${coords.y + offsetY}%`;
+          if (scale < 1) {
+            el.style.transform = `translate(-50%, -58%) scale(${scale})`;
+          }
+
+          if (game.movableTokenIds.includes(token.id)) {
+            el.classList.add('movable');
+          }
+
+          el.addEventListener('click', () => handleTokenClick(token));
+          layer.appendChild(el);
+        });
+      });
+    }
+
+    /* ==========================================================================
+       10. TURN FLOW, 3D DICE ROLLING & LUDO RULES ENGINE
+       ========================================================================== */
+    function getCurrentPlayer() {
+      return game.players[game.turnIndex];
+    }
+
+    function showToast(msg) {
+      const toast = document.getElementById('toastBanner');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      clearTimeout(toast._timer);
+      toast._timer = setTimeout(() => toast.classList.remove('show'), 1800);
+    }
+
+    function beginTurn() {
+      if (!game.active) return;
+
+      const player = getCurrentPlayer();
+      // Skip players who have already finished all 4 tokens
+      if (player.finishedCount >= 4) {
+        nextTurn(false);
+        return;
+      }
+
+      game.hasRolled = false;
+      game.isAnimating = false;
+      game.movableTokenIds = [];
+      renderAllTokens();
+
+      // Update active pod glow
+      COLORS.forEach(c => {
+        const pod = document.getElementById(`pod-${c}`);
+        const box = document.getElementById(`diceBox-${c}`);
+        pod.classList.toggle('active-turn', c === player.color);
+        box.classList.toggle('dice-pulse', c === player.color && !player.isAI);
+      });
+
+      const banner = document.getElementById('turnBanner');
+      banner.style.borderColor = COLOR_HEX[player.color];
+      banner.textContent = player.isAI
+        ? `🤖 ${player.name} is rolling...`
+        : `🎲 ${player.name}'s Turn — Tap Dice!`;
+
+      if (player.isAI) {
+        setTimeout(() => rollDice(), 650);
+      }
+    }
+
+    function handleDiceClick(color) {
+      if (!game.active || game.hasRolled || game.isAnimating) return;
+      const player = getCurrentPlayer();
+      if (player.color !== color || player.isAI) return;
+      rollDice();
+    }
+
+    function setDiceCubeRotation(color, value) {
+      const cube = document.getElementById(`diceCube-${color}`);
+      const rotations = {
+        1: 'rotateX(0deg) rotateY(0deg)',
+        2: 'rotateX(0deg) rotateY(-90deg)',
+        3: 'rotateX(-90deg) rotateY(0deg)',
+        4: 'rotateX(90deg) rotateY(0deg)',
+        5: 'rotateX(0deg) rotateY(90deg)',
+        6: 'rotateX(0deg) rotateY(180deg)'
+      };
+      cube.style.transform = rotations[value];
+    }
+
+    function rollDice() {
+      game.hasRolled = true;
+      game.isAnimating = true;
+
+      const player = getCurrentPlayer();
+      const box = document.getElementById(`diceBox-${player.color}`);
+      const cube = document.getElementById(`diceCube-${player.color}`);
+      box.classList.remove('dice-pulse');
+
+      audio.playDiceRoll();
+      cube.classList.add('rolling');
+
+      // Generate fair 1..6 roll (with slight smart boost if all 4 tokens are locked in yard)
+      let roll = Math.floor(Math.random() * 6) + 1;
+      const allInYard = player.tokens.every(t => t.steps === -1);
+      if (allInYard && roll !== 6 && Math.random() < 0.22) {
+        roll = 6; // Improves pacing when player has 0 tokens on board
+      }
+
+      setTimeout(() => {
+        cube.classList.remove('rolling');
+        game.diceValue = roll;
+        setDiceCubeRotation(player.color, roll);
+        game.isAnimating = false;
+        evaluatePostRoll();
+      }, 520);
+    }
+
+    function evaluatePostRoll() {
+      const player = getCurrentPlayer();
+      const roll = game.diceValue;
+
+      // Three Consecutive Sixes Rule
+      if (roll === 6) {
+        game.consecutiveSixes++;
+        if (game.consecutiveSixes >= 3) {
+          audio.playTripleSix();
+          showToast('⚠️ Three 6s in a row! Turn forfeited.');
+          game.consecutiveSixes = 0;
+          setTimeout(() => nextTurn(false), 1100);
+          return;
+        }
+      } else {
+        game.consecutiveSixes = 0;
+      }
+
+      // Find valid movable tokens
+      const validTokens = player.tokens.filter(t => {
+        if (t.steps >= 56) return false;
+        if (t.steps === -1) return roll === 6;
+        return (t.steps + roll) <= 56;
+      });
+
+      if (validTokens.length === 0) {
+        document.getElementById('turnBanner').textContent = `Rolled ${roll} — No valid moves`;
+        setTimeout(() => nextTurn(false), 950);
+        return;
+      }
+
+      game.movableTokenIds = validTokens.map(t => t.id);
+      renderAllTokens();
+
+      if (player.isAI) {
+        document.getElementById('turnBanner').textContent = `🤖 ${player.name} rolled ${roll}`;
+        const chosen = chooseBestAIMove(player, validTokens, roll);
+        setTimeout(() => executeTokenMove(chosen), 550);
+      } else {
+        // Auto-move if only 1 distinct option exists (e.g., only 1 token out on track, or all 4 in yard on a 6)
+        const uniquePositions = new Set(validTokens.map(t => t.steps));
+        if (validTokens.length === 1 || uniquePositions.size === 1) {
+          document.getElementById('turnBanner').textContent = `Rolled ${roll} — Moving token...`;
+          setTimeout(() => executeTokenMove(validTokens[0]), 380);
+        } else {
+          document.getElementById('turnBanner').textContent = `Rolled ${roll} — Tap a glowing token!`;
+        }
+      }
+    }
+
+    /* ==========================================================================
+       11. SMART COMPUTER AI HEURISTIC
+       ========================================================================== */
+    function chooseBestAIMove(player, validTokens, roll) {
+      let bestToken = validTokens[0];
+      let bestScore = -9999;
+
+      validTokens.forEach(token => {
+        let score = 0;
+        const nextSteps = token.steps === -1 ? 0 : token.steps + roll;
+
+        // Priority 1: Reach Home Center Goal (56)
+        if (nextSteps === 56) score += 120;
+
+        // Priority 2: Capture an Opponent Token
+        if (nextSteps <= 50) {
+          const targetTrackIdx = (START_OFFSET[token.color] + nextSteps) % 52;
+          if (!SAFE_TRACK_INDICES.has(targetTrackIdx)) {
+            const hasOpponent = game.players.some(other =>
+              other.color !== player.color &&
+              other.tokens.some(ot => ot.steps >= 0 && ot.steps <= 50 && ((START_OFFSET[other.color] + ot.steps) % 52) === targetTrackIdx)
+            );
+            if (hasOpponent) score += 105;
+          }
+          // Priority 4: Land on a Star Safe Zone
+          if (SAFE_TRACK_INDICES.has(targetTrackIdx)) score += 45;
+        }
+
+        // Priority 3: Deploy a new token from Home Yard on rolling 6
+        if (token.steps === -1 && roll === 6) score += 75;
+
+        // Priority 5: Enter protected Home Stretch
+        if (token.steps <= 50 && nextSteps > 50) score += 65;
+
+        // Priority 6: Escape danger if currently on an unsafe tile
+        if (token.steps >= 0 && token.steps <= 50) {
+          const currTrackIdx = (START_OFFSET[token.color] + token.steps) % 52;
+          if (!SAFE_TRACK_INDICES.has(currTrackIdx)) score += 25;
+        }
+
+        // Slight preference for advancing lead token
+        score += nextSteps * 0.35;
+
+        if (score > bestScore) {
+          bestScore = score;
+          bestToken = token;
+        }
+      });
+
+      return bestToken;
+    }
+
+    /* ==========================================================================
+       12. STEP-BY-STEP TOKEN MOVEMENT, CAPTURES & WIN DETECTION
+       ========================================================================== */
+    function handleTokenClick(token) {
+      if (!game.active || game.isAnimating) return;
+      const player = getCurrentPlayer();
+      if (player.isAI || token.color !== player.color) return;
+      if (!game.movableTokenIds.includes(token.id)) return;
+
+      executeTokenMove(token);
+    }
+
+    async function executeTokenMove(token) {
+      game.isAnimating = true;
+      game.movableTokenIds = [];
+      renderAllTokens();
+
+      const player = getCurrentPlayer();
+      let bonusTurn = (game.diceValue === 6);
+
+      if (token.steps === -1) {
+        // Deploy from Yard to Start Tile (steps = 0)
+        token.steps = 0;
+        audio.playDeploy();
+        renderAllTokens();
+        await sleep(260);
+      } else {
+        // Hop step-by-step
+        const targetSteps = token.steps + game.diceValue;
+        while (token.steps < targetSteps) {
+          token.steps++;
+          audio.playStep();
+          renderAllTokens();
+          const el = document.getElementById(`token-${token.id}`);
+          if (el) el.classList.add('hopping');
+          await sleep(165);
+        }
+      }
+
+      // Check if token reached Home Goal (56)
+      if (token.steps === 56) {
+        player.finishedCount++;
+        document.getElementById(`podSub-${player.color}`).textContent = `Home: ${player.finishedCount}/4`;
+        audio.playHomeGoal();
+        spawnBurstAtToken(token, '#fbbf24');
+        showToast(`👑 ${player.name} scored a token home! Bonus Roll!`);
+        bonusTurn = true;
+      }
+      // Check for Safe Star or Opponent Capture on Main Track (0..50)
+      else if (token.steps <= 50) {
+        const trackIdx = (START_OFFSET[token.color] + token.steps) % 52;
+        if (SAFE_TRACK_INDICES.has(trackIdx)) {
+          audio.playSafeStar();
+        } else {
+          // Check opponent tokens on the exact same main track index
+          let capturedAny = false;
+          game.players.forEach(other => {
+            if (other.color === player.color) return;
+            other.tokens.forEach(ot => {
+              if (ot.steps >= 0 && ot.steps <= 50) {
+                const otherIdx = (START_OFFSET[other.color] + ot.steps) % 52;
+                if (otherIdx === trackIdx) {
+                  ot.steps = -1; // Send opponent back to home yard!
+                  capturedAny = true;
+                }
+              }
+            });
+          });
+
+          if (capturedAny) {
+            audio.playCapture();
+            spawnBurstAtToken(token, '#ef4444');
+            showToast(`💥 Captured! ${player.name} gets a Bonus Roll!`);
+            bonusTurn = true;
+            renderAllTokens();
+            await sleep(280);
+          }
+        }
+      }
+
+      // Check if Player Finished All 4 Tokens
+      if (player.finishedCount >= 4 && !game.rankings.includes(player)) {
+        game.rankings.push(player);
+        showToast(`🎉 ${player.name} finished #${game.rankings.length}!`);
+
+        // End game when only 1 player remains (or 1st place wins in 2-player mode)
+        if (game.rankings.length >= game.players.length - 1) {
+          const remaining = game.players.find(p => !game.rankings.includes(p));
+          if (remaining) game.rankings.push(remaining);
+          endMatch();
+          return;
+        }
+        bonusTurn = false;
+      }
+
+      nextTurn(bonusTurn);
+    }
+
+    function nextTurn(bonusTurn) {
+      if (!game.active) return;
+
+      if (bonusTurn) {
+        beginTurn();
+        return;
+      }
+
+      game.consecutiveSixes = 0;
+      let attempts = 0;
+      do {
+        game.turnIndex = (game.turnIndex + 1) % game.players.length;
+        attempts++;
+      } while (game.players[game.turnIndex].finishedCount >= 4 && attempts <= game.players.length);
+
+      beginTurn();
+    }
+
+    function sleep(ms) {
+      return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    /* ==========================================================================
+       13. VISUAL PARTICLE BURSTS & CONFETTI CELEBRATION
+       ========================================================================== */
+    function spawnBurstAtToken(token, color) {
+      const el = document.getElementById(`token-${token.id}`);
+      if (!el) return;
+      const rect = el.getBoundingClientRect();
+      const cx = rect.left + rect.width / 2;
+      const cy = rect.top + rect.height / 2;
+      const fx = document.getElementById('fxLayer');
+
+      for (let i = 0; i < 18; i++) {
+        const p = document.createElement('div');
+        p.className = 'particle';
+        p.style.left = `${cx}px`;
+        p.style.top = `${cy}px`;
+        p.style.background = i % 2 === 0 ? color : '#ffffff';
+        const angle = (Math.PI * 2 * i) / 18;
+        const dist = 35 + Math.random() * 55;
+        p.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+        p.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+        fx.appendChild(p);
+        setTimeout(() => p.remove(), 700);
+      }
+    }
+
+    function launchConfetti() {
+      const fx = document.getElementById('fxLayer');
+      const palette = ['#ef4444', '#22c55e', '#eab308', '#3b82f6', '#f472b6', '#ffffff'];
+      for (let i = 0; i < 75; i++) {
+        const c = document.createElement('div');
+        c.className = 'confetti';
+        c.style.left = `${Math.random() * 100}vw`;
+        c.style.background = palette[i % palette.length];
+        c.style.animationDuration = `${1.8 + Math.random() * 2.2}s`;
+        c.style.animationDelay = `${Math.random() * 0.6}s`;
+        fx.appendChild(c);
+        setTimeout(() => c.remove(), 4500);
+      }
+    }
+
+    /* ==========================================================================
+       14. MATCH END, PODIUM & LOCALSTORAGE HISTORY
+       ========================================================================== */
+    function endMatch() {
+      game.active = false;
+      audio.playWinFanfare();
+      launchConfetti();
+
+      const champion = game.rankings[0];
+      document.getElementById('winnerHeadline').textContent = `${champion.name} Wins!`;
+      document.getElementById('winnerSubtext').textContent = `Champion of the ${game.players.length}-Player Royal Match!`;
+
+      const podiumList = document.getElementById('podiumList');
+      podiumList.innerHTML = '';
+      const medals = ['🥇 1st', '🥈 2nd', '🥉 3rd', '4th'];
+
+      game.rankings.forEach((p, idx) => {
+        const row = document.createElement('div');
+        row.style.cssText = 'display:flex; justify-content:space-between; align-items:center; padding:10px 14px; background:rgba(255,255,255,0.08); border-radius:14px; font-weight:800;';
+        row.innerHTML = `
+          <span>${medals[idx]} — <span style="color:${COLOR_HEX[p.color]}">${p.name}</span></span>
+          <span style="font-size:0.8rem; color:#94a3b8;">${p.isAI ? 'BOT' : 'HUMAN'}</span>
+        `;
+        podiumList.appendChild(row);
+      });
+
+      // Record stats if main human profile participated
+      const humanSlot = game.players.find(p => !p.isAI);
+      if (humanSlot) {
+        const won = champion.color === humanSlot.color;
+        if (won) {
+          userData.wins++;
+          userData.score += 100;
+        } else {
+          userData.losses++;
+          userData.score += 20;
+        }
+
+        const dateStr = new Date().toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+        userData.history.unshift({
+          result: won ? 'WIN' : 'LOSS',
+          mode: `${game.players.length}P Match`,
+          winner: champion.name,
+          date: dateStr
+        });
+        if (userData.history.length > 20) userData.history.pop();
+        saveUserData();
+      }
+
+      openModal('winnerModal');
+    }
+
+    /* ==========================================================================
+       15. PROFILE, THEME & SETTINGS HANDLERS
+       ========================================================================== */
+    function updateProfileUI() {
+      document.getElementById('homePlayerName').textContent = userData.name;
+      document.getElementById('homePlayerScore').textContent = userData.score;
+      document.getElementById('homeAvatar').textContent = userData.avatar;
+
+      document.getElementById('profileNameInput').value = userData.name;
+      document.getElementById('statScore').textContent = userData.score;
+      document.getElementById('statWins').textContent = userData.wins;
+      document.getElementById('statLosses').textContent = userData.losses;
+
+      document.querySelectorAll('.avatar-opt').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.avatar === userData.avatar);
+      });
+
+      const historyList = document.getElementById('historyList');
+      if (userData.history.length === 0) {
+        historyList.innerHTML = '<div style="text-align:center; color:#64748b; padding:16px; font-size:0.85rem;">No matches played yet.</div>';
+      } else {
+        historyList.innerHTML = userData.history.map(item => `
+          <div class="history-item">
+            <div>
+              <strong style="color:${item.result === 'WIN' ? '#4ade80' : '#f87171'}">${item.result}</strong>
+              <span style="color:#cbd5e1;"> • ${item.mode}</span>
+            </div>
+            <div style="color:#94a3b8; font-size:0.75rem;">Winner: ${item.winner} (${item.date})</div>
+          </div>
+        `).join('');
+      }
+    }
+
+    function applyTheme(themeName, persist = true) {
+      document.body.classList.remove('theme-neon', 'theme-wood', 'theme-candy');
+      if (themeName !== 'classic') {
+        document.body.classList.add(`theme-${themeName}`);
+      }
+      userData.theme = themeName;
+      document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.theme === themeName);
+      });
+      if (persist) saveUserData();
+    }
+
+    function updateSettingsUI() {
+      const sfxBtn = document.getElementById('toggleSfxBtn');
+      sfxBtn.textContent = userData.sfx ? 'ON' : 'OFF';
+      sfxBtn.className = `btn-3d ${userData.sfx ? 'btn-green' : 'btn-red'}`;
+
+      const musicBtn = document.getElementById('toggleMusicBtn');
+      musicBtn.textContent = userData.music ? 'ON' : 'OFF';
+      musicBtn.className = `btn-3d ${userData.music ? 'btn-green' : 'btn-blue'}`;
+
+      const soundIcon = userData.sfx ? '🔊' : '🔇';
+      document.getElementById('quickSoundBtn').textContent = soundIcon;
+      document.getElementById('inGameSoundBtn').textContent = soundIcon;
+    }
+
+    /* ==========================================================================
+       16. MODAL HELPERS & EVENT LISTENERS
+       ========================================================================== */
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+
+    function closeAllModals() {
+      document.querySelectorAll('.modal-backdrop').forEach(m => m.classList.remove('active'));
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      buildBoardGrid();
+      initDiceBoxes();
+      loadUserData();
+
+      // Sync first slot name with user profile name
+      setupState.slots[0].name = userData.name;
+      renderSetupSlots();
+
+      // Close modal buttons
+      document.querySelectorAll('[data-close]').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.getElementById(btn.dataset.close).classList.remove('active');
+        });
+      });
+
+      // Home Screen Buttons
+      document.getElementById('openSetupBtn').addEventListener('click', () => {
+        setupState.slots[0].name = userData.name;
+        renderSetupSlots();
+        openModal('setupModal');
+      });
+
+      document.getElementById('quickVsAiBtn').addEventListener('click', () => {
+        setupState.playerCount = 2;
+        setupState.slots[0] = { color: 'red', name: userData.name, isAI: false, active: true };
+        setupState.slots[2] = { color: 'yellow', name: 'Bot King', isAI: true, active: true };
+        startMatch();
+      });
+
+      document.getElementById('quickPassPlayBtn').addEventListener('click', () => {
+        setupState.playerCount = 4;
+        setupState.slots = [
+          { color: 'red', name: userData.name, isAI: false, active: true },
+          { color: 'green', name: 'Player 2', isAI: false, active: true },
+          { color: 'yellow', name: 'Player 3', isAI: false, active: true },
+          { color: 'blue', name: 'Player 4', isAI: false, active: true }
+        ];
+        startMatch();
+      });
+
+      document.getElementById('openProfilePill').addEventListener('click', () => openModal('profileModal'));
+      document.getElementById('openProfileBtn').addEventListener('click', () => openModal('profileModal'));
+      document.getElementById('openSettingsBtn').addEventListener('click', () => openModal('settingsModal'));
+
+      // Quick Sound & Theme Toggles
+      const toggleSoundHandler = () => {
+        userData.sfx = !userData.sfx;
+        audio.sfxEnabled = userData.sfx;
+        if (userData.sfx) audio.playStep();
+        updateSettingsUI();
+        saveUserData();
+      };
+      document.getElementById('quickSoundBtn').addEventListener('click', toggleSoundHandler);
+      document.getElementById('inGameSoundBtn').addEventListener('click', toggleSoundHandler);
+
+      document.getElementById('quickThemeBtn').addEventListener('click', () => {
+        const themes = ['classic', 'neon', 'wood', 'candy'];
+        const next = themes[(themes.indexOf(userData.theme) + 1) % themes.length];
+        applyTheme(next, true);
+        showToast(`Theme: ${next.toUpperCase()}`);
+      });
+
+      // Setup Modal Controls
+      document.querySelectorAll('#playerCountSelector .mode-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          setupState.playerCount = Number(btn.dataset.count);
+          renderSetupSlots();
+        });
+      });
+
+      document.getElementById('presetVsComputer').addEventListener('click', () => {
+        setupState.slots.forEach((s, i) => {
+          s.isAI = i !== 0;
+          s.name = i === 0 ? userData.name : ['Bot Leo', 'Bot Maya', 'Bot Max', 'Bot Nova'][i];
+        });
+        renderSetupSlots();
+      });
+
+      document.getElementById('presetPassPlay').addEventListener('click', () => {
+        setupState.slots.forEach((s, i) => {
+          s.isAI = false;
+          s.name = i === 0 ? userData.name : `Player ${i + 1}`;
+        });
+        renderSetupSlots();
+      });
+
+      document.getElementById('startGameConfirmBtn').addEventListener('click', startMatch);
+
+      // Profile Modal Controls
+      document.querySelectorAll('.avatar-opt').forEach(btn => {
+        btn.addEventListener('click', () => {
+          userData.avatar = btn.dataset.avatar;
+          saveUserData();
+        });
+      });
+
+      document.getElementById('profileNameInput').addEventListener('input', (e) => {
+        userData.name = e.target.value.trim() || 'King Player';
+        saveUserData();
+      });
+
+      // Settings Modal Controls
+      document.getElementById('toggleSfxBtn').addEventListener('click', toggleSoundHandler);
+      document.getElementById('toggleMusicBtn').addEventListener('click', () => {
+        userData.music = !userData.music;
+        audio.toggleMusic(userData.music);
+        updateSettingsUI();
+        saveUserData();
+      });
+
+      document.querySelectorAll('.theme-option').forEach(btn => {
+        btn.addEventListener('click', () => applyTheme(btn.dataset.theme, true));
+      });
+
+      // Gameplay Navigation & Winner Controls
+      document.getElementById('exitGameBtn').addEventListener('click', () => openModal('confirmExitModal'));
+      document.getElementById('confirmExitYesBtn').addEventListener('click', () => {
+        game.active = false;
+        closeAllModals();
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('homeScreen').classList.remove('hidden');
+      });
+
+      document.getElementById('winnerHomeBtn').addEventListener('click', () => {
+        closeAllModals();
+        document.getElementById('gameScreen').classList.add('hidden');
+        document.getElementById('homeScreen').classList.remove('hidden');
+      });
+
+      document.getElementById('winnerRematchBtn').addEventListener('click', startMatch);
+    });
+  </script>
+</body>
+</html>
